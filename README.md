@@ -15,9 +15,9 @@ Características clave:
 ## 2. Modelo mental (resumen rápido)
 Capacidad (DaySlot) → Hold (bloqueo temporal) → Booking (confirmado)
 
-Reglas clave:
-- Nunca se confirma un booking sin pasar por un hold.
-- Nunca se consume capacidad directamente al confirmar.
+**Reglas clave:**
+- **Nunca** se confirma un booking sin pasar por un hold.
+- **Nunca** se consume capacidad directamente al confirmar.
 - El hold es la única forma de reservar cupo.
 
 ## 3. Casos de uso (Use Cases)
@@ -28,8 +28,13 @@ Reglas clave:
     - service_id
     - location_id (opcional)
     - from, to (YYYY-MM-DD)
-- Salida: lista de días con slot (AM/PM), total, reserved, available
-- No modifica estado (solo lectura).
+- Salida:
+    - lista de días con
+        - slot (AM/PM)
+        - total
+        - reserved
+        - available (derivable)
+> No modifica estado (solo lectura).
 
 ### 3.2 Crear hold (bloqueo temporal)
 - Use case: CreateHoldUseCase
@@ -71,7 +76,11 @@ Reglas clave:
 - Eventos se guardan en la misma transacción (outbox).
 
 ## 5. Outbox / Eventos
-Eventos emitidos:
+- Todo cambio importante genera un evento
+- Eventos se guardan en la misma transacción
+- Dispatcher los publica de forma asíncrona
+
+**Eventos emitidos:**
 - `HOLD_CREATED`
 - `HOLD_CANCELED`
 - `HOLD_EXPIRED`
@@ -81,10 +90,10 @@ El outbox persiste mensajes (JSON) para publicación asíncrona.
 
 ## 6. Storage
 Implementaciones:
-- `internal/storage/memory` (dev)
+- `internal/storage/memory` (default/dev)
 - `internal/storage/postgres` (producción)
 
-El dominio y los usecases no dependen de la implementación concreta.
+> Nota: El dominio y los usecases no saben qué storage se usa.
 
 ## 7. Migraciones / Esquema (referencia)
 El paquete `internal/storage/postgres` incluye una constante `Schema` con SQL mínimo para crear tablas:
