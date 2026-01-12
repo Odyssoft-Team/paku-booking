@@ -1,5 +1,8 @@
 package httpapi
 
+// @tag.name booking
+// @tag.description Operaciones del dominio "booking": disponibilidad, holds, bookings, administración y operativas internas.
+
 import (
 	"encoding/json"
 	"net/http"

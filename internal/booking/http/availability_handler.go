@@ -8,6 +8,19 @@ import (
 	"paku-booking/internal/booking/usecases"
 )
 
+// @Summary Get availability
+// @Description Consulta la disponibilidad de day slots entre dos fechas para un servicio (por día y slot).
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param service_id query string true "Service ID"
+// @Param location_id query string false "Location ID"
+// @Param from query string true "From date (YYYY-MM-DD)"
+// @Param to query string true "To date (YYYY-MM-DD)"
+// @Success 200 {object} AvailabilityResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /availability [get]
 func (h *Handlers) GetAvailability(w http.ResponseWriter, r *http.Request) {
 	serviceID := r.URL.Query().Get("service_id")
 	locationID := r.URL.Query().Get("location_id")

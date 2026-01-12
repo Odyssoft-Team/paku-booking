@@ -10,6 +10,18 @@ import (
 	"github.com/google/uuid"
 )
 
+// @Summary Confirm booking
+// @Description Confirma un booking a partir de un hold y payment_id. Idempotente.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param body body ConfirmBookingRequest true "Confirm booking request"
+// @Success 200 {object} ConfirmBookingResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /bookings/confirm [post]
 func (h *Handlers) ConfirmBooking(w http.ResponseWriter, r *http.Request) {
 	var req ConfirmBookingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

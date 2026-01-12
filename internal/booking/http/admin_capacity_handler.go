@@ -9,6 +9,17 @@ import (
 	"paku-booking/internal/booking/usecases"
 )
 
+// @Summary Admin set capacity
+// @Description Define la capacidad total para un día y slot.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param body body AdminSetCapacityRequest true "Set capacity request"
+// @Success 204 {object} nil
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/capacity [put]
 func (h *Handlers) AdminSetCapacity(w http.ResponseWriter, r *http.Request) {
 	var req AdminSetCapacityRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -53,6 +64,17 @@ func (h *Handlers) AdminSetCapacity(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Admin adjust capacity
+// @Description Ajusta capacidad en un rango de fechas (delta puede ser negativo o positivo).
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param body body AdminAdjustCapacityRequest true "Adjust capacity request"
+// @Success 204 {object} nil
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/capacity/adjust [post]
 func (h *Handlers) AdminAdjustCapacity(w http.ResponseWriter, r *http.Request) {
 	var req AdminAdjustCapacityRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,6 +132,17 @@ func (h *Handlers) AdminAdjustCapacity(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary Admin close days
+// @Description Cierra días (total=0) en un rango si no hay reservas activas.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param body body AdminCloseDaysRequest true "Close days request"
+// @Success 204 {object} nil
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/capacity/close-days [post]
 func (h *Handlers) AdminCloseDays(w http.ResponseWriter, r *http.Request) {
 	var req AdminCloseDaysRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

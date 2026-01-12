@@ -1,3 +1,7 @@
+// @title Paku Booking API
+// @version 1.0
+// @description API del servicio Paku Booking
+// @BasePath /
 package main
 
 import (

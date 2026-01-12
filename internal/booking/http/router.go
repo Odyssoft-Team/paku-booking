@@ -25,6 +25,18 @@ type RouterOptions struct {
 	Env     string
 }
 
+// @Summary Health check
+// @Description Estado de salud simple del servicio.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "ok"
+// @Router /health [get]
+func Health(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("ok"))
+}
+
 func NewRouter(opts RouterOptions) http.Handler {
 	r := chi.NewRouter()
 
@@ -34,10 +46,7 @@ func NewRouter(opts RouterOptions) http.Handler {
 	r.Use(chimw.Recoverer)
 
 	// Health
-	r.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	r.Get("/health", Health)
 
 	// ---- deps (inyección) ----
 	repo := opts.Repo

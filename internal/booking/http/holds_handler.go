@@ -12,6 +12,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// @Summary Create hold
+// @Description Crea un hold (bloqueo temporal de cupos) para un servicio/fecha/slot.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param body body CreateHoldRequest true "Create hold request"
+// @Success 201 {object} CreateHoldResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /holds [post]
 func (h *Handlers) CreateHold(w http.ResponseWriter, r *http.Request) {
 	var req CreateHoldRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -55,6 +66,17 @@ func (h *Handlers) CreateHold(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary Cancel hold
+// @Description Cancela un hold. Es idempotente; si el hold no está activo no hace nada.
+// @Tags booking
+// @Accept json
+// @Produce json
+// @Param id path string true "Hold ID"
+// @Success 204 {object} nil
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /holds/{id}/cancel [post]
 func (h *Handlers) CancelHold(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if _, err := uuid.Parse(id); err != nil {
