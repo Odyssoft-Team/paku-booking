@@ -1,0 +1,506 @@
+basePath: /
+definitions:
+  booking.EventType:
+    enum:
+    - HOLD_CREATED
+    - HOLD_CANCELED
+    - HOLD_EXPIRED
+    - BOOKING_CONFIRMED
+    type: string
+    x-enum-varnames:
+    - EventHoldCreated
+    - EventHoldCanceled
+    - EventHoldExpired
+    - EventBookingConfirmed
+  booking.OutboxMessage:
+    properties:
+      attempts:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: string
+      lastError:
+        type: string
+      payload:
+        description: JSON
+        items:
+          format: int32
+          type: integer
+        type: array
+      sentAt:
+        type: string
+      status:
+        $ref: '#/definitions/booking.OutboxStatus'
+      type:
+        $ref: '#/definitions/booking.EventType'
+    type: object
+  booking.OutboxStatus:
+    enum:
+    - PENDING
+    - SENT
+    - FAILED
+    type: string
+    x-enum-varnames:
+    - OutboxPending
+    - OutboxSent
+    - OutboxFailed
+  booking.Slot:
+    enum:
+    - AM
+    - PM
+    type: string
+    x-enum-varnames:
+    - SlotAM
+    - SlotPM
+  httpapi.AdminAdjustCapacityRequest:
+    properties:
+      delta:
+        type: integer
+      from:
+        description: YYYY-MM-DD
+        type: string
+      location_id:
+        type: string
+      service_id:
+        type: string
+      slot:
+        description: 'AM|PM (si vacío: ambos)'
+        type: string
+      to:
+        description: YYYY-MM-DD
+        type: string
+    type: object
+  httpapi.AdminCloseDaysRequest:
+    properties:
+      from:
+        description: YYYY-MM-DD
+        type: string
+      location_id:
+        type: string
+      service_id:
+        type: string
+      slot:
+        description: 'AM|PM (si vacío: ambos)'
+        type: string
+      to:
+        description: YYYY-MM-DD
+        type: string
+    type: object
+  httpapi.AdminSetCapacityRequest:
+    properties:
+      date:
+        description: YYYY-MM-DD
+        type: string
+      location_id:
+        type: string
+      service_id:
+        type: string
+      slot:
+        description: AM|PM
+        type: string
+      total:
+        type: integer
+    type: object
+  httpapi.AvailabilityDay:
+    properties:
+      date:
+        description: YYYY-MM-DD
+        type: string
+      slots:
+        items:
+          $ref: '#/definitions/httpapi.AvailabilityDaySlot'
+        type: array
+    type: object
+  httpapi.AvailabilityDaySlot:
+    properties:
+      available:
+        type: integer
+      reserved:
+        type: integer
+      slot:
+        allOf:
+        - $ref: '#/definitions/booking.Slot'
+        description: AM/PM
+      total:
+        type: integer
+    type: object
+  httpapi.AvailabilityResponse:
+    properties:
+      days:
+        items:
+          $ref: '#/definitions/httpapi.AvailabilityDay'
+        type: array
+      from:
+        description: YYYY-MM-DD
+        type: string
+      location_id:
+        type: string
+      service_id:
+        type: string
+      to:
+        description: YYYY-MM-DD
+        type: string
+    type: object
+  httpapi.ConfirmBookingRequest:
+    properties:
+      hold_id:
+        type: string
+      payment_id:
+        type: string
+    type: object
+  httpapi.ConfirmBookingResponse:
+    properties:
+      booking_id:
+        type: string
+      status:
+        type: string
+    type: object
+  httpapi.CreateHoldRequest:
+    properties:
+      date:
+        description: YYYY-MM-DD
+        type: string
+      location_id:
+        type: string
+      qty:
+        description: default 1
+        type: integer
+      service_id:
+        type: string
+      slot:
+        description: AM|PM
+        type: string
+    type: object
+  httpapi.CreateHoldResponse:
+    properties:
+      expires_at:
+        description: RFC3339
+        type: string
+      hold_id:
+        type: string
+    type: object
+  httpapi.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  httpapi.ExpireHoldsNowResponse:
+    properties:
+      expired:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: API del servicio Paku Booking
+  title: Paku Booking API
+  version: "1.0"
+paths:
+  /admin/capacity:
+    put:
+      consumes:
+      - application/json
+      description: Define la capacidad total para un día y slot.
+      parameters:
+      - description: Set capacity request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.AdminSetCapacityRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Admin set capacity
+      tags:
+      - booking
+  /admin/capacity/adjust:
+    post:
+      consumes:
+      - application/json
+      description: Ajusta capacidad en un rango de fechas (delta puede ser negativo
+        o positivo).
+      parameters:
+      - description: Adjust capacity request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.AdminAdjustCapacityRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Admin adjust capacity
+      tags:
+      - booking
+  /admin/capacity/close-days:
+    post:
+      consumes:
+      - application/json
+      description: Cierra días (total=0) en un rango si no hay reservas activas.
+      parameters:
+      - description: Close days request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.AdminCloseDaysRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Admin close days
+      tags:
+      - booking
+  /availability:
+    get:
+      consumes:
+      - application/json
+      description: Consulta la disponibilidad de day slots entre dos fechas para un
+        servicio (por día y slot).
+      parameters:
+      - description: Service ID
+        in: query
+        name: service_id
+        required: true
+        type: string
+      - description: Location ID
+        in: query
+        name: location_id
+        type: string
+      - description: From date (YYYY-MM-DD)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: To date (YYYY-MM-DD)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.AvailabilityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Get availability
+      tags:
+      - booking
+  /bookings/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirma un booking a partir de un hold y payment_id. Idempotente.
+      parameters:
+      - description: Confirm booking request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.ConfirmBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.ConfirmBookingResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Confirm booking
+      tags:
+      - booking
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Estado de salud simple del servicio.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - booking
+  /holds:
+    post:
+      consumes:
+      - application/json
+      description: Crea un hold (bloqueo temporal de cupos) para un servicio/fecha/slot.
+      parameters:
+      - description: Create hold request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.CreateHoldRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpapi.CreateHoldResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Create hold
+      tags:
+      - booking
+  /holds/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancela un hold. Es idempotente; si el hold no está activo no hace
+        nada.
+      parameters:
+      - description: Hold ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Cancel hold
+      tags:
+      - booking
+  /internal/holds/expire-now:
+    post:
+      consumes:
+      - application/json
+      description: Ejecuta el job de expiración de holds de forma inmediata (operación
+        interna).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.ExpireHoldsNowResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: Expire holds now
+      tags:
+      - booking
+  /internal/outbox/pending:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve mensajes pendientes del outbox (ordenados por created_at).
+      parameters:
+      - default: 50
+        description: Limit results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/booking.OutboxMessage'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.ErrorResponse'
+      summary: List pending outbox
+      tags:
+      - booking
+swagger: "2.0"

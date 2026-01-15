@@ -12,6 +12,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+
+	_ "paku-booking/docs" // Importar docs generados
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type RouterOptions struct {
@@ -127,6 +131,16 @@ func NewRouter(opts RouterOptions) http.Handler {
 		AdminAdjustCapUC:   adminAdjustCapUC,
 		AdminCloseDaysUC:   adminCloseDaysUC,
 	})
+
+	// Swagger UI con URL absoluta desde config
+	swaggerURL := "/api/v1/booking/swagger/doc.json"
+	if opts.Env == "dev" {
+		swaggerURL = "/swagger/doc.json"
+	}
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL(swaggerURL),
+	))
 
 	// ---- routes ----
 	r.Get("/availability", h.GetAvailability)
