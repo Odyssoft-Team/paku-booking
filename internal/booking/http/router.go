@@ -132,14 +132,9 @@ func NewRouter(opts RouterOptions) http.Handler {
 		AdminCloseDaysUC:   adminCloseDaysUC,
 	})
 
-	// Swagger UI con URL absoluta desde config
-	swaggerURL := "/api/v1/booking/swagger/doc.json"
-	if opts.Env == "dev" {
-		swaggerURL = "/swagger/doc.json"
-	}
-
+	// Swagger UI - usar URL relativa (funciona con cualquier prefijo)
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL(swaggerURL),
+		httpSwagger.URL("./doc.json"), // ← Cambio: ruta relativa
 	))
 
 	// ---- routes ----
